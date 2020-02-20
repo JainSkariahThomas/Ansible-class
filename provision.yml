@@ -1,0 +1,62 @@
+---
+- name: "New provision script to setup ec2 Instance"
+  hosts: local
+  connection: local
+  become: true
+  gather_facts: true
+  vars:
+    keyname: flat11fkey
+    region: us-east-2
+    image: ami-0e38b48473ea57778
+    security_group: ansible-lab
+    instance_type: t2.micro
+    aws_access_key: AKIA43HCVA6US5FCPRYO
+    aws_secret_key: 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
+    count: 1
+    debug_enable: true
+  tasks:
+    - name: "Create a new key pair"
+      ec2_key:
+        name: "{{ keyname }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: ec2_keyout
+    - debug:
+        var: ec2_keyout
+    - name: "Saving Key for access"
+      copy:
+        content: "{{ ec2_keyout.key.private_key }}"
+        dest: "{{ keyname }}.pub"
+        mode: "0400"
+      when: key_output.changed
+    - name: "Creating a new Ec2 Instance"
+      ec2:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ image }}"
+        group: "{{ security_group }}"
+        keypair: "{{ flat11fkey }}"
+        count: 1
+        wait: true
+        wait_time: 500
+        count_tag:
+          name: "Ansible/Jain"
+          instance_tags:
+          Name: "Ansible/Master"
+          role: "Ansible-lab"
+      register: master_output
+    - debug:
+        var: master_output
+    - debug:
+        var: master_output.instances.0.public_ip
+
+    - name: "Waiting for master to come online"
+      wait_for:
+        port: 22
+        host: "{{ master_output.instances.0.public_ip }}"
+        timeout: 20
+        state: started
+        delay: 5
