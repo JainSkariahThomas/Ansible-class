@@ -12,8 +12,8 @@
     instance_type: t2.micro
     master_user: ec2-user
     client_user: ec2-user
-    aws_access_key: AKIA43HCVA6US5FCPRYO
-    aws_secret_key: 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
+    aws_access_key: 
+    aws_secret_key: 
     count: 1 
     debug_enable: true
 
