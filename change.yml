@@ -1,0 +1,20 @@
+---
+- name: Intall https on the server
+  hosts: ubuntu
+  gather_facts: false
+  become: true
+
+  tasks:
+
+    - name: Apache instll starteds
+      replace:
+        path: /etc/apache2/apache2.conf
+        regexp: '(^Timeout\s*300)'
+        replace: 'Timeout 100'
+      register: changed
+    - debug:
+        var: changed.changed
+    - name: apache2
+      service: name=apache2 state=restarted enabled=true
+      when: changed.changed == true
+
